@@ -1,0 +1,15 @@
+{
+  "name": "pocket-article-length-sorter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Gary Katsevman <me@gkatsev.com>",
+  "license": "MIT",
+  "dependencies": {
+    "hapi": "^8.2.0",
+    "node-getpocket": "^1.0.0"
+  }
+}
