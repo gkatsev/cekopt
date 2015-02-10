@@ -1,4 +1,5 @@
 var Hapi = require('hapi');
+var uuid = require('node-uuid');
 var Pocket = require('node-getpocket');
 var extend = require('util')._extend;
 
@@ -8,7 +9,6 @@ var config = {
   "consumer_key": process.env.KEY,
 };
 var request_token;
-var access_token;
 var pocket;
 
 if (!config.consumer_key) {
@@ -19,8 +19,8 @@ pocket = new Pocket(config);
 
 var server = new Hapi.Server({
   debug: {
-    log: ['errors', 'hapi'],
-    request: ['errors', 'hapi', 'pocket']
+    log: ['errors', 'hapi', 'log'],
+    request: ['errors', 'hapi', 'pocket', 'log']
   }
 });
 
@@ -33,6 +33,12 @@ server.route({
   method: "GET",
   path: "/",
   handler: function(req, reply) {
+    var access_token = req.session.get('access_token');
+
+    if (access_token) {
+      req.log('log', 'Access token found. Redirecting to /list');
+      return reply().redirect('/list');
+    }
 
     pocket.getRequestToken({
       redirect_uri: redirect_url
@@ -49,6 +55,7 @@ server.route({
         request_token: request_token
       }, config));
       req.log('pocket', url);
+      req.log('log', 'Redirectiong to auth url');
       reply().redirect(url);
     });
   }
@@ -67,7 +74,8 @@ server.route({
       }
 
       var json = JSON.parse(body);
-      access_token = json.access_token;
+      var access_token = json.access_token;
+      req.session.set('access_token', access_token);
       reply().redirect('/list');
     });
   }
@@ -77,6 +85,13 @@ server.route({
   method: "GET",
   path: "/list",
   handler: function(req, reply) {
+    var access_token = req.session.get('access_token');
+
+    if (!access_token) {
+      req.log('log', 'No access token found. Redirecting to /');
+      return reply().redirect('/');
+    }
+
     var pocket = new Pocket({
       access_token: access_token,
       consumer_key: config.consumer_key
@@ -89,4 +104,21 @@ server.route({
   }
 });
 
-server.start()
+server.register({
+  register: require('yar'),
+  options: {
+    maxCookieSize: 0,
+    cookieOptions: {
+      password: uuid.v4(),
+      clearInvalid: true,
+      isSecure: false
+    }
+  }
+}, function(err) {
+  if (err) {
+    return console.log(err);
+  }
+
+  server.start()
+});
+

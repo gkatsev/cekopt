@@ -10,6 +10,8 @@
   "license": "MIT",
   "dependencies": {
     "hapi": "^8.2.0",
-    "node-getpocket": "^1.0.0"
+    "node-getpocket": "^1.0.0",
+    "node-uuid": "^1.4.2",
+    "yar": "^3.0.3"
   }
 }
