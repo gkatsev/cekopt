@@ -30,8 +30,8 @@ var server = new Hapi.Server({
 });
 
 server.connection({
-  host: 'localhost',
-  port: '8088'
+  host: '0.0.0.0',
+  port: port
 });
 
 server.route({
