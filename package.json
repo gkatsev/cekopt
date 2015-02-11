@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "browserify app/app.js -o app/bundle.js",
+    "watch": "watchify -d -v app/app.js -o app/bundle.js",
+    "start": "npm run build && node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Gary Katsevman <me@gkatsev.com>",
@@ -19,7 +22,8 @@
     "yar": "^3.0.3"
   },
   "devDependencies": {
-    "browserify": "^8.1.3"
+    "browserify": "^8.1.3",
+    "watchify": "^2.3.0"
   },
   "browser": {
     "request": "xhr"
