@@ -1,9 +1,12 @@
+require('es5-shim');
+require('es6-shim');
 var Hapi = require('hapi');
 var uuid = require('node-uuid');
 var Pocket = require('node-getpocket');
 var extend = require('util')._extend;
 var baseUrl = process.env.URL || "localhost";
 var port = process.env.PORT || "8088";
+var cookiePass = process.env.PASS || uuid.v4();
 
 var redirect_url = "http://"+ baseUrl +":"+ port +"/redirect";
 var config = {
@@ -78,8 +81,18 @@ server.route({
       var json = JSON.parse(body);
       var access_token = json.access_token;
       req.session.set('access_token', access_token);
-      reply().redirect('/list');
+      reply().redirect('/app/index.html');
     });
+  }
+});
+
+server.route({
+  method: "GET",
+  path: "/app/{param}",
+  handler: {
+    directory: {
+      path: "./app"
+    }
   }
 });
 
@@ -101,7 +114,7 @@ server.route({
     pocket.get({
       state: "unread"
     }, function(err, res) {
-      reply(JSON.stringify(res, null, 2));
+      reply(res);
     });
   }
 });
@@ -111,7 +124,7 @@ server.register({
   options: {
     maxCookieSize: 0,
     cookieOptions: {
-      password: uuid.v4(),
+      password: cookiePass,
       clearInvalid: true,
       isSecure: false
     }
