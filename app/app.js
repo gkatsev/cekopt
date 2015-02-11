@@ -8,7 +8,9 @@ var pocket = require('../pocket-utils.js');
 var displayList = function(list) {
   var ol = document.createElement('ol');
 
-  list.forEach(function(item) {
+  list.sort(function(a, b) {
+    return a.word_count - b.word_count;
+  }).forEach(function(item) {
     var li = document.createElement('li');
     var a = document.createElement('a');
 
