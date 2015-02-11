@@ -2,8 +2,10 @@ var Hapi = require('hapi');
 var uuid = require('node-uuid');
 var Pocket = require('node-getpocket');
 var extend = require('util')._extend;
+var baseUrl = process.env.URL || "localhost";
+var port = process.env.PORT || "8088";
 
-var redirect_url = "http://localhost:8088/redirect";
+var redirect_url = "http://"+ baseUrl +":"+ port +"/redirect";
 var config = {
   "redirect_uri": redirect_url,
   "consumer_key": process.env.KEY,
