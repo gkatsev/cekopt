@@ -37,12 +37,20 @@ server.connection({
 server.route({
   method: "GET",
   path: "/",
+  handler: {
+    file: "./index.html"
+  }
+});
+
+server.route({
+  method: "GET",
+  path: "/login",
   handler: function(req, reply) {
     var access_token = req.session.get('access_token');
 
     if (access_token) {
-      req.log('log', 'Access token found. Redirecting to /list');
-      return reply().redirect('/list');
+      req.log('log', 'Access token found. Redirecting to /app/index.html');
+      return reply().redirect('/app/index.html');
     }
 
     pocket.getRequestToken({
@@ -103,8 +111,8 @@ server.route({
     var access_token = req.session.get('access_token');
 
     if (!access_token) {
-      req.log('log', 'No access token found. Redirecting to /');
-      return reply().redirect('/');
+      req.log('log', 'No access token found. Redirecting to /login');
+      return reply().redirect('/login');
     }
 
     var pocket = new Pocket({
