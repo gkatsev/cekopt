@@ -3,6 +3,7 @@ require('es6-shim');
 var Hapi = require('hapi');
 var uuid = require('node-uuid');
 var Pocket = require('node-getpocket');
+var readability = require('readability-api');
 var extend = require('util')._extend;
 var baseUrl = process.env.URL || "localhost";
 var port = process.env.PORT || "8088";
@@ -21,6 +22,10 @@ if (!config.consumer_key) {
 }
 
 pocket = new Pocket(config);
+
+readability.configure({
+  parser_token: process.env.PARSER_TOKEN
+});
 
 var server = new Hapi.Server({
   debug: {
@@ -106,7 +111,24 @@ server.route({
 
 server.route({
   method: "GET",
-  path: "/list",
+  path: "/read/article",
+  handler: function(req, reply) {
+    var url = req.query.url;
+    var parser = new readability.parser();
+
+    parser.parse(url, function(err, data) {
+      reply({
+        title: data.title,
+        word_count: data.word_count
+      });
+    });
+
+  }
+});
+
+server.route({
+  method: "GET",
+  path: "/pocket/list",
   handler: function(req, reply) {
     var access_token = req.session.get('access_token');
 
