@@ -37,8 +37,6 @@ var displayList = function(list) {
 
       a.textContent = item.resolved_title || body.title || item.resolved_url;
       a.href = item.resolved_url;
-      li.appendChild(document.createTextNode('['+ item.word_count +'] '));
-      li.appendChild(document.createTextNode('['+ item.word_count/250 +' mins] '));
       li.appendChild(document.createTextNode('['+ body.word_count +'] '));
       li.appendChild(document.createTextNode('['+ body.word_count/250 +' mins] '));
       li.appendChild(a);
