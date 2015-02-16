@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "browserify app/app.js -o app/bundle.js",
-    "watch": "watchify -d -v app/app.js -o app/bundle.js",
+    "watch": "watchify app/app.js -o app/bundle.js -dv",
     "start": "npm run build && node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
