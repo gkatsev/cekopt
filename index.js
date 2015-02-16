@@ -4,17 +4,17 @@ var Hapi = require('hapi');
 var uuid = require('node-uuid');
 var Pocket = require('node-getpocket');
 var readability = require('readability-api');
-var extend = require('util')._extend;
 var baseUrl = process.env.URL || "localhost";
 var port = process.env.PORT || "8088";
 var cookiePass = process.env.PASS || uuid.v4();
+
+var loginHandler = require('./src/login.js');
 
 var redirect_url = "http://"+ baseUrl +":"+ port +"/redirect";
 var config = {
   "redirect_uri": redirect_url,
   "consumer_key": process.env.KEY,
 };
-var request_token;
 var pocket;
 
 if (!config.consumer_key) {
@@ -29,8 +29,8 @@ readability.configure({
 
 var server = new Hapi.Server({
   debug: {
-    log: ['error', 'hapi', 'log'],
-    request: ['error', 'hapi', 'pocket', 'log']
+    log: ['error', 'hapi', 'log', 'handler'],
+    request: ['error', 'hapi', 'pocket', 'log', 'handler']
   }
 });
 
@@ -38,6 +38,8 @@ server.connection({
   host: '0.0.0.0',
   port: port
 });
+
+loginHandler(server, pocket, config, redirect_url);
 
 server.route({
   method: "GET",
@@ -49,63 +51,16 @@ server.route({
 
 server.route({
   method: "GET",
-  path: "/login",
-  handler: function(req, reply) {
-    var access_token = req.session.get('access_token');
-
-    if (access_token) {
-      req.log('log', 'Access token found. Redirecting to /app/index.html');
-      return reply().redirect('/app/index.html');
-    }
-
-    pocket.getRequestToken({
-      redirect_uri: redirect_url
-    }, function(err, res, body) {
-      if (err) {
-        req.log('errors', err);
-        return reply(err.message);
-      }
-
-      var json = JSON.parse(body);
-      request_token = json.code;
-      req.log('pocket', request_token);
-      var url = pocket.getAuthorizeURL(extend({
-        request_token: request_token
-      }, config));
-      req.log('pocket', url);
-      req.log('log', 'Redirectiong to auth url');
-      reply().redirect(url);
-    });
-  }
-});
-
-server.route({
-  method: "GET",
-  path: "/redirect",
-  handler: function(req, reply) {
-    pocket.getAccessToken(extend({
-      request_token: request_token
-    }, config), function(err, res, body) {
-      if (err) {
-        req.log('errors', err);
-        return reply(err.message);
-      }
-
-      var json = JSON.parse(body);
-      var access_token = json.access_token;
-      req.session.set('access_token', access_token);
-      reply().redirect('/app/index.html');
-    });
-  }
-});
-
-server.route({
-  method: "GET",
   path: "/app/{param}",
   handler: {
     directory: {
       path: "./app"
     }
+  },
+  config: {
+    pre: [
+      {method: loginHandler.verifyLogin, assign: 'verifyLogin'}
+    ]
   }
 });
 
@@ -122,7 +77,11 @@ server.route({
         word_count: data.word_count
       });
     });
-
+  },
+  config: {
+    pre: [
+      {method: loginHandler.verifyLogin, assign: 'verifyLogin'}
+    ]
   }
 });
 
@@ -131,12 +90,6 @@ server.route({
   path: "/pocket/list",
   handler: function(req, reply) {
     var access_token = req.session.get('access_token');
-
-    if (!access_token) {
-      req.log('log', 'No access token found. Redirecting to /login');
-      return reply().redirect('/login');
-    }
-
     var pocket = new Pocket({
       access_token: access_token,
       consumer_key: config.consumer_key
@@ -146,6 +99,11 @@ server.route({
     }, function(err, res) {
       reply(res);
     });
+  },
+  config: {
+    pre: [
+      {method: loginHandler.verifyLogin, assign: 'verifyLogin'}
+    ]
   }
 });
 
