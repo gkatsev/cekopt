@@ -29,8 +29,8 @@ readability.configure({
 
 var server = new Hapi.Server({
   debug: {
-    log: ['errors', 'hapi', 'log'],
-    request: ['errors', 'hapi', 'pocket', 'log']
+    log: ['error', 'hapi', 'log'],
+    request: ['error', 'hapi', 'pocket', 'log']
   }
 });
 
