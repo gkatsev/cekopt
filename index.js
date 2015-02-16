@@ -3,12 +3,13 @@ require('es6-shim');
 var Hapi = require('hapi');
 var uuid = require('node-uuid');
 var Pocket = require('node-getpocket');
-var readability = require('readability-api');
 var baseUrl = process.env.URL || "localhost";
 var port = process.env.PORT || "8088";
 var cookiePass = process.env.PASS || uuid.v4();
 
 var loginHandler = require('./src/login.js');
+var pocketHandler = require('./src/pocket.js');
+var readabilityHandler = require('./src/readability.js');
 
 var redirect_url = "http://"+ baseUrl +":"+ port +"/redirect";
 var config = {
@@ -23,10 +24,6 @@ if (!config.consumer_key) {
 
 pocket = new Pocket(config);
 
-readability.configure({
-  parser_token: process.env.PARSER_TOKEN
-});
-
 var server = new Hapi.Server({
   debug: {
     log: ['error', 'hapi', 'log', 'handler'],
@@ -40,6 +37,8 @@ server.connection({
 });
 
 loginHandler(server, pocket, config, redirect_url);
+pocketHandler(server, config);
+readabilityHandler(server);
 
 server.route({
   method: "GET",
@@ -56,49 +55,6 @@ server.route({
     directory: {
       path: "./app"
     }
-  },
-  config: {
-    pre: [
-      {method: loginHandler.verifyLogin, assign: 'verifyLogin'}
-    ]
-  }
-});
-
-server.route({
-  method: "GET",
-  path: "/read/article",
-  handler: function(req, reply) {
-    var url = req.query.url;
-    var parser = new readability.parser();
-
-    parser.parse(url, function(err, data) {
-      reply({
-        title: data.title,
-        word_count: data.word_count
-      });
-    });
-  },
-  config: {
-    pre: [
-      {method: loginHandler.verifyLogin, assign: 'verifyLogin'}
-    ]
-  }
-});
-
-server.route({
-  method: "GET",
-  path: "/pocket/list",
-  handler: function(req, reply) {
-    var access_token = req.session.get('access_token');
-    var pocket = new Pocket({
-      access_token: access_token,
-      consumer_key: config.consumer_key
-    });
-    pocket.get({
-      state: "unread"
-    }, function(err, res) {
-      reply(res);
-    });
   },
   config: {
     pre: [
