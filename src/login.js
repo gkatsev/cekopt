@@ -1,4 +1,5 @@
 var extend = require('util')._extend;
+var Pocket = require('node-getpocket');
 var request_token;
 
 var verifyLogin = function(req, reply) {
@@ -14,7 +15,9 @@ var verifyLogin = function(req, reply) {
   reply();
 };
 
-module.exports = function(server, pocket, config, redirect_url) {
+module.exports = function(server, config, redirect_url) {
+  var pocket = new Pocket(config);
+
   server.route({
     method: "GET",
     path: "/login",

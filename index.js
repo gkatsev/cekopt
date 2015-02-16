@@ -2,7 +2,6 @@ require('es5-shim');
 require('es6-shim');
 var Hapi = require('hapi');
 var uuid = require('node-uuid');
-var Pocket = require('node-getpocket');
 var baseUrl = process.env.URL || "localhost";
 var port = process.env.PORT || "8088";
 var cookiePass = process.env.PASS || uuid.v4();
@@ -16,13 +15,10 @@ var config = {
   "redirect_uri": redirect_url,
   "consumer_key": process.env.KEY,
 };
-var pocket;
 
 if (!config.consumer_key) {
   throw new Error("No Consumer Key provided, cannot proceed");
 }
-
-pocket = new Pocket(config);
 
 var server = new Hapi.Server({
   debug: {
@@ -36,7 +32,7 @@ server.connection({
   port: port
 });
 
-loginHandler(server, pocket, config, redirect_url);
+loginHandler(server, config, redirect_url);
 pocketHandler(server, config);
 readabilityHandler(server);
 
