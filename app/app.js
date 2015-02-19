@@ -10,7 +10,7 @@ var displayList = function(list) {
   var ol = document.createElement('ol');
 
   list.sort(function(a, b) {
-    return a.word_count - b.word_count;
+    return a.readability.word_count - b.readability.word_count;
   }).forEach(function(item) {
       var li = document.createElement('li');
       var a = document.createElement('a');
@@ -21,7 +21,6 @@ var displayList = function(list) {
       li.appendChild(document.createTextNode('['+ item.readability.word_count/250 +' mins] '));
       li.appendChild(a);
       ol.appendChild(li);
-    //});
 
   });
 
@@ -29,7 +28,6 @@ var displayList = function(list) {
 }
 
 var doWork = function(json) {
-  //var list = utils.asList(json.result.list);
   var list = json.list
   displayList(list);
 };
