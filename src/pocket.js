@@ -1,5 +1,22 @@
+var Promise = require('bluebird');
 var Pocket = require('node-getpocket');
 var verifyLogin = require('./login.js').verifyLogin;
+var article = require('./readability.js').article;
+var utils = require('../utils.js');
+
+var addReadabilityInfo = function(list) {
+  return Promise.map(list.map(function(item) {
+    return item.resolved_url;
+  }), function(url, i) {
+    return article(url)
+    .then(utils.extractTileWordCount)
+    .then(function(data) {
+      console.log(data);
+      list[i].readability = data;
+      return list[i];
+    });
+  });
+};
 
 module.exports = function(server, config) {
   server.route({
@@ -11,10 +28,23 @@ module.exports = function(server, config) {
         access_token: access_token,
         consumer_key: config.consumer_key
       });
-      pocket.get({
-        state: "unread"
-      }, function(err, res) {
-        reply(res);
+      var get = Promise.promisify(pocket.get, pocket);
+      get({
+        state: 'unread'
+      })
+      .then(function(res) {
+        // just use 10 items for now for testing
+        var list = utils.asList(res.list).slice(-10);
+        return [res, addReadabilityInfo(list)];
+      })
+      .spread(function(res, list) {
+        reply({
+          result: res,
+          list: list
+        });
+      })
+      .catch(function(e) {
+        req.log('error', e);
       });
     },
     config: {

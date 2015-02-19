@@ -23,7 +23,7 @@ if (!config.consumer_key) {
 var server = new Hapi.Server({
   debug: {
     log: ['error', 'hapi', 'log', 'handler'],
-    request: ['error', 'hapi', 'pocket', 'log', 'handler']
+    request: ['error', 'hapi', 'pocket', 'log', 'handler', 'readability']
   }
 });
 
