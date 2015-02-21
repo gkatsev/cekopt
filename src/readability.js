@@ -9,10 +9,23 @@ var parser;
 readability.configure({
   parser_token: process.env.PARSER_TOKEN
 });
-parser = new readability.parser();
+parser = Promise.promisifyAll(new readability.parser());
 
-article = Promise.promisify(parser.parse, parser)
-confidence = Promise.promisify(parser.confidence, parser);
+article = function(url) {
+  return Promise.resolve(parser)
+  .call('requestAsync', 'GET', '/parser', {url: url});
+};
+confidence = function(url) {
+  return Promise.resolve(parser)
+  .call('requestAsync', 'GET', '/confidence', {url: url})
+  .spread(function(res, body) {
+    if (body.confidence) {
+      return [res, body.confidence];
+    }
+
+    return [res, body];
+  });
+};
 
 module.exports = function(server) {
   server.route({
