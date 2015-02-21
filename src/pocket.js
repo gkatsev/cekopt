@@ -1,3 +1,4 @@
+var Boom = require('boom');
 var Promise = require('bluebird');
 var Pocket = require('node-getpocket');
 var verifyLogin = require('./login.js').verifyLogin;
@@ -8,10 +9,18 @@ var addReadabilityInfo = function(list) {
   return Promise.map(list.map(function(item) {
     return item.resolved_url;
   }), function(url, i) {
-    return article(url)
+    return utils.retry(function(n) {
+      return article(url)
+      .spread(function(res, data) {
+        if (res.statusCode < 200 && res.statusCode > 300) {
+          return Promise.reject(new Error(res.statusMessage));
+        }
+
+        return data;
+      });
+    }, 3)
     .then(utils.extractTileWordCount)
     .then(function(data) {
-      console.log(data);
       list[i].readability = data;
       return list[i];
     });
@@ -35,7 +44,10 @@ module.exports = function(server, config) {
       .then(function(res) {
         // just use 10 items for now for testing
         var list = utils.asList(res.list).slice(-10);
-        return [res, addReadabilityInfo(list)];
+        return addReadabilityInfo(list)
+        .then(function(list) {
+          return [res, list];
+        })
       })
       .spread(function(res, list) {
         reply({
@@ -44,13 +56,23 @@ module.exports = function(server, config) {
         });
       })
       .catch(function(e) {
-        req.log('error', e);
+        reply(Boom.wrap(e, 502));
       });
     },
     config: {
       pre: [
         {method: verifyLogin, assign: 'verifyLogin'}
       ]
+    }
+  });
+
+  server.route({
+    method: 'GET',
+    path: '/pocket/test',
+    handler: function(req, reply) {
+      var fs = require('fs');
+      var outputStream = fs.createReadStream('./output.json');
+      reply(outputStream);
     }
   });
 };
