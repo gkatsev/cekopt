@@ -10,15 +10,41 @@ var addReadabilityInfo = function(list) {
     return item.resolved_url;
   }), function(url, i) {
     return utils.retry(function(n) {
+      console.log(n, url);
       return article(url)
+      .catch(function(e) {
+        return Promise.reject(e);
+      })
+      .catch(function() {
+        return [{
+          statusCode: 404,
+          statusMessage: 'Could not make a request'
+        }]
+      })
       .spread(function(res, data) {
         if (res.statusCode < 200 && res.statusCode > 300) {
+          console.error(url, res.statusCode, data);
           return Promise.reject(new Error(res.statusMessage));
         }
 
         return data;
       });
     }, 3)
+    .then(function(data) {
+      if (data.error) {
+        return Promise.reject(new Error(data.messages));
+      }
+
+      return data;
+    })
+    .catch(function(e) {
+      // if we got here, there was an issue with readability
+      // either couldn't get data or we exceeded hourly allowance.
+      // We still want to return the list of items to the client,
+      // so, just return an empty object here, which will default
+      // word_count to zero.
+      return {};
+    })
     .then(utils.extractTileWordCount)
     .then(function(data) {
       list[i].readability = data;
@@ -42,8 +68,7 @@ module.exports = function(server, config) {
         state: 'unread'
       })
       .then(function(res) {
-        // just use 10 items for now for testing
-        var list = utils.asList(res.list).slice(-10);
+        var list = utils.asList(res.list);
         return addReadabilityInfo(list)
         .then(function(list) {
           return [res, list];
