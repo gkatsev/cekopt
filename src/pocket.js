@@ -45,7 +45,7 @@ var addReadabilityInfo = function(list) {
       // word_count to zero.
       return {};
     })
-    .then(utils.extractTileWordCount)
+    .then(utils.extractTitleWordCount)
     .then(function(data) {
       list[i].readability = data;
       return list[i];

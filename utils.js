@@ -7,7 +7,7 @@ exports.asList = function(list) {
   });
 };
 
-exports.extractTileWordCount = function(data) {
+exports.extractTitleWordCount = function(data) {
   return {
     title: data.title || '',
     word_count: data.word_count || 0
