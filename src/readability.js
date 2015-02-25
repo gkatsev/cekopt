@@ -2,6 +2,7 @@ var Promise = require('bluebird');
 var readability = require('readability-api');
 var verifyLogin = require('./login.js').verifyLogin;
 var utils = require('../utils.js');
+var db = require('./level.js');
 var article;
 var confidence;
 var parser;
@@ -12,8 +13,17 @@ readability.configure({
 parser = Promise.promisifyAll(new readability.parser());
 
 article = function(url) {
-  return Promise.resolve(parser)
-  .call('requestAsync', 'GET', '/parser', {url: url});
+  var key = 'url!' + url;
+  console.log('getting url %s', url);
+  return db.get(key)
+  .catch(function (e) {
+    return Promise.resolve(parser)
+    .call('requestAsync', 'GET', '/parser', {url: url})
+    .then(function(data) {
+      db.put(key, data);
+      return data;
+    });
+  });
 };
 confidence = function(url) {
   return Promise.resolve(parser)

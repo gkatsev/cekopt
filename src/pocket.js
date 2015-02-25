@@ -10,7 +10,6 @@ var addReadabilityInfo = function(list) {
     return item.resolved_url;
   }), function(url, i) {
     return utils.retry(function(n) {
-      console.log(n, url);
       return article(url)
       .catch(function(e) {
         return Promise.reject(e);
