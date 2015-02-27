@@ -1,12 +1,35 @@
+<style>
+  .ordering-group, .filter-group {
+    display: inline-block;
+    margin: 1em;
+  }
+
+  .ordering {
+    margin-right: 1em;
+  }
+
+  .filter {
+    width: 50px;
+    margin-right: 1em;
+  }
+
+  li {
+    line-height: 1.3em;
+  }
+</style>
 <title>Cekopt</title>
-<h1>Your unread items on Pocket</h1>
-<p>Sorted by Pocket's claimed word count.</p>
+<h1>Your unread items on Pocket, sorted</h1>
 <div class="ordering-group">
   <label>
     <input type="radio" name="ordering" class="ordering" value="asc" checked>Ascending
   </label>
   <label>
     <input type="radio" name="ordering" class="ordering" value="des">Descending
+  </label>
+</div>
+<div class="filter-group">
+  <label>
+    <input type="number" name="filter" class="filter" value="">Filter by minutes
   </label>
 </div>
 <div class="placeholder"></div>
